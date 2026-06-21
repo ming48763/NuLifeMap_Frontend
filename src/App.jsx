@@ -1,74 +1,9 @@
-import React, { useState, useEffect } from 'react';
-
 // 🌟 調用四個專業員工元件
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import MapArea from './components/MapArea';
 import AddModal from './components/AddModal';
 import React, { useState, useEffect } from 'react';
-
-// ==========================================
-// 為了讓預覽環境正常運作的模擬元件 (本地端請保持原本的 import 方式)
-// ==========================================
-const Login = ({ onLogin }) => (
-  <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
-    <div className="p-8 bg-white rounded-lg shadow-md text-center">
-      <h2 className="text-2xl font-bold mb-4">NuLifeMap 登入</h2>
-      <button 
-        onClick={() => onLogin({ account: 'mapper', name: '測試員' })}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        測試登入
-      </button>
-    </div>
-  </div>
-);
-
-const Sidebar = ({ user, onLogout, onOpenModal }) => (
-  <div className="w-80 h-full bg-slate-100 p-4 border-r flex flex-col shadow-sm">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold">🗺️ NuLifeMap</h2>
-      <button onClick={onLogout} className="text-sm text-slate-500 hover:text-slate-800">登出</button>
-    </div>
-    <div className="mb-4 text-sm text-slate-600">歡迎, {user?.name || user?.account}</div>
-    <button 
-      onClick={onOpenModal}
-      className="w-full py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors shadow-sm"
-    >
-      + 新增地標
-    </button>
-    <div className="mt-6 flex-1 overflow-y-auto">
-      <div className="text-center text-slate-400 mt-10">資料載入中或無資料...</div>
-    </div>
-  </div>
-);
-
-const MapArea = () => (
-  <div className="flex-1 h-full bg-slate-200 flex items-center justify-center">
-    <div className="text-slate-400 text-lg flex flex-col items-center">
-      <span className="text-4xl mb-2">📍</span>
-      <span>地圖區域 (預覽模式)</span>
-    </div>
-  </div>
-);
-
-const AddModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white w-96 p-6 rounded-lg shadow-xl">
-        <h3 className="text-xl font-bold mb-4">新增地標</h3>
-        <p className="text-slate-500 mb-6">請在本地端專案查看完整表單功能。</p>
-        <button 
-          onClick={onClose}
-          className="w-full py-2 bg-slate-200 text-slate-800 rounded hover:bg-slate-300"
-        >
-          關閉
-        </button>
-      </div>
-    </div>
-  );
-};
 
 export default function App() {
   // ==========================================
