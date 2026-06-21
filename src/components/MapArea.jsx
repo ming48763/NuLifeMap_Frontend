@@ -424,7 +424,6 @@ export default function MapArea({
   }, [isMapReady, jobs]);
 
   return (
-    return (
     <div ref={mapAreaWrapperRef} style={{ flex: 1, height: '100%', position: 'relative', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
       {/* 👇 這行最關鍵：寬高一定要是 100% */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }} />
