@@ -74,7 +74,7 @@ export default function MapArea({
         mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
           center: { lat: 24.1552, lng: 120.6768 }, 
           zoom: 13, 
-          mapId: 'DEMO_MAP_ID', // 🌟 已修正為測試 ID
+          mapId: '3c73b549351a9c392d89c3bb',
           disableDefaultUI: true, 
           zoomControl: true, 
         });
