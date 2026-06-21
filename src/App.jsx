@@ -89,7 +89,7 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-row bg-white text-slate-900 font-sans text-left z-50 overflow-hidden">
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif' }}>
       
       <Sidebar 
         user={user} 
