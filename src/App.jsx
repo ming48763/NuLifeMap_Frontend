@@ -35,12 +35,12 @@ export default function App() {
   // ==========================================
   // 2. 資料抓取邏輯
   // ==========================================
-  const fetchData = () => {
+  onst fetchData = () => {
     if (!user) return; 
     
     setLoadingData(true);
     
-    // 🌟 安全讀取環境變數 (相容本地端 Vite 與雲端預覽環境)
+    // 🌟 安全讀取環境變數
     let API_BASE = 'http://127.0.0.1:3000';
     try {
       if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
@@ -50,14 +50,19 @@ export default function App() {
       console.warn("無法讀取環境變數，使用預設 API_BASE");
     }
     
-    // 在 API 請求帶上 userId，讓後端只回傳屬於這個人的資料
+    // 🌟 串接後端 API
     fetch(`${API_BASE}/api/markers?userId=${user.account}`)
       .then(res => {
         if (!res.ok) throw new Error("伺服器回應錯誤");
         return res.json();
       })
       .then(data => {
-        const validData = data.filter(item => item.lat && item.lng);
+        console.log("🌟 後端回傳的原始資料:", data); 
+        
+        // 確保資料是陣列格式，避免 filter 報錯
+        const actualData = Array.isArray(data) ? data : (data.data || data.markers || []);
+        const validData = actualData.filter(item => item.lat && item.lng);
+        
         setJobs(validData);
         setLoadingData(false);
       })
@@ -66,23 +71,7 @@ export default function App() {
         setJobs([]); 
         setLoadingData(false);
       });
-      
-      .then(data => {
-        console.log("後端回傳的原始資料格式:", data); // 檢查這裡
-        
-        // 暫時將篩選器放寬，看看資料是否真的存在
-        const validData = data.filter(item => {
-          const hasCoords = (item.lat !== undefined && item.lng !== undefined) || 
-                            (item.latitude !== undefined && item.longitude !== undefined);
-          return hasCoords;
-        });
-        
-        console.log("過濾後剩下的資料:", validData);
-        setJobs(validData);
-        setLoadingData(false);
-      })
   };
-
   // 當使用者狀態改變(登入成功)時，觸發抓取專屬資料
   useEffect(() => {
     fetchData();
