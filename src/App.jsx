@@ -35,7 +35,7 @@ export default function App() {
   // ==========================================
   // 2. 資料抓取邏輯
   // ==========================================
-  onst fetchData = () => {
+  const fetchData = () => {
     if (!user) return; 
     
     setLoadingData(true);
