@@ -73,6 +73,22 @@ export default function App() {
     fetchData();
   }, [user]);
 
+  // debug
+  .then(data => {
+  console.log("後端回傳的原始資料格式:", data); // 檢查這裡
+  
+  // 暫時將篩選器放寬，看看資料是否真的存在
+  const validData = data.filter(item => {
+    const hasCoords = (item.lat !== undefined && item.lng !== undefined) || 
+                      (item.latitude !== undefined && item.longitude !== undefined);
+    return hasCoords;
+  });
+  
+  console.log("過濾後剩下的資料:", validData);
+  setJobs(validData);
+  setLoadingData(false);
+})
+
   // ==========================================
   // 3. 組合與分配畫面
   // ==========================================
