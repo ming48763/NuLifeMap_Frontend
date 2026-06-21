@@ -81,7 +81,7 @@ export default function MapArea({
     if (isMapReady && mapContainerRef.current && !mapInstanceRef.current) {
       try {
         mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
-          center: { lat: 24.1552, lng: 120.6768 }, zoom: 13, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, zoomControl: true, 
+          center: { lat: 24.1552, lng: 120.6768 }, zoom: 13, mapId: '3c73b549351a9c392d89c3bb', disableDefaultUI: true, zoomControl: true, 
         });
       } catch (err) {
         setMapError("地圖繪製發生錯誤：" + err.message);
