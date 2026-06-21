@@ -31,6 +31,12 @@ export default function MapArea({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
+  // 🌟 必須明確設定地圖的寬高！
+  const mapContainerStyle = {
+    width: '100%',
+    height: '100%' 
+  };
+
   // ⚠️ 本地開發請換回：const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY; 
 
@@ -75,7 +81,7 @@ export default function MapArea({
     if (isMapReady && mapContainerRef.current && !mapInstanceRef.current) {
       try {
         mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
-          center: { lat: 24.1552, lng: 120.6768 }, zoom: 13, mapId: '3c73b549351a9c392d89c3bb', disableDefaultUI: true, zoomControl: true, 
+          center: { lat: 24.1552, lng: 120.6768 }, zoom: 13, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, zoomControl: true, 
         });
       } catch (err) {
         setMapError("地圖繪製發生錯誤：" + err.message);
@@ -419,7 +425,7 @@ export default function MapArea({
 
   return (
     <div ref={mapAreaWrapperRef} style={{ flex: 1, height: '100%', position: 'relative', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
-      <div ref={mapContainerRef} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <div ref={mapContainerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }} />
       
       {appMode === 'distance' && <div style={{ position: 'absolute', inset: 0, border: '6px solid #3b82f6', pointerEvents: 'none', zIndex: 15, transition: 'all 0.3s' }} />}
       {appMode === 'radius' && <div style={{ position: 'absolute', inset: 0, border: '6px solid #9333ea', pointerEvents: 'none', zIndex: 15, transition: 'all 0.3s' }} />}
