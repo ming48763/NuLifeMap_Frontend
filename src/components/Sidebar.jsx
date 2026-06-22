@@ -46,8 +46,10 @@ export default function Sidebar({
       if (newWidth > 420) newWidth = 420; 
       
       // 🎯 需求 2：向左拖曳小於 200px 時，觸發收合模式
-      if (newWidth < 200) {
+      if (newWidth < 260) {
         setIsCollapsed(true);
+        setSidebarWidth(420); // 魔法：收合時把寬度設回預設值，下次展開才會是漂亮的寬度
+
         // 觸發收合後立刻強制中斷拖曳狀態，避免滑鼠還在拖曳中產生 Bug
         if (isResizing.current) {
           isResizing.current = false;
@@ -57,7 +59,6 @@ export default function Sidebar({
         return; 
       }
       
-      if (newWidth < 280) newWidth = 280; // 限制最小瘦身寬度，避免版面太擠
       setSidebarWidth(newWidth);
     }
   }, [setIsCollapsed, setSidebarWidth]);
