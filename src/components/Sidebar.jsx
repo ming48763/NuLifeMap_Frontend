@@ -10,7 +10,7 @@ export default function Sidebar({
   setAppMode, 
   onOpenModal, 
   onFocusItem,
-  onDeleteItem // 🌟 2. 接收從 App.jsx 傳來的刪除函式
+  onDeleteItem, // 🌟 2. 接收從 App.jsx 傳來的刪除函式
   sidebarWidth, 
   setSidebarWidth, 
   isCollapsed, 
