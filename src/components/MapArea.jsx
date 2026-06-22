@@ -355,8 +355,8 @@ export default function MapArea({
           markerContainer.addEventListener('mouseenter', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') openPopup(true); });
           markerContainer.addEventListener('mouseleave', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') closePopup(); });
 
-          // 🌟 已更新為 gmp-click
-          marker.addEventListener('gmp-click', () => {
+          markerContainer.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止點擊穿透到底圖
             const state = appStateRef.current;
             if (state.mode === 'distance') {
               if (state.distPoints.length < 2) setDistPoints([...state.distPoints, firstItem]);
