@@ -485,7 +485,7 @@ export default function MapArea({
 
       {/* 🌟 瘦身後的測距模式功能視窗 */}
       {appMode === 'distance' && (
-        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `calc(var(--sidebar-width) + ${panelPos.x}px)`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px)`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '4px', cursor: isDragging ? 'grabbing' : 'grab' }}>
             <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#1e3a8a', fontSize: '16px' }}><Route size={20} color="#2563eb"/> 兩點測距</h3>
             <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding: 0 }}><X size={20}/></button>
@@ -501,7 +501,7 @@ export default function MapArea({
       )}
 
       {appMode === 'radius' && (
-        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `calc(var(--sidebar-width) + ${panelPos.x}px)`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px)`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
             <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#581c87', fontSize: '16px' }}><Target size={20} color="#9333ea"/> 範圍探索</h3>
             <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding: 0 }}><X size={20}/></button>

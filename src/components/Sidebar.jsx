@@ -95,7 +95,7 @@ export default function Sidebar({
   // 🎯 如果是收合模式，顯示 80px 的「迷你側邊欄」
   if (isCollapsed) {
     return (
-      <div style={{ width: '80px', flexShrink: 0, height: '100%', backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', zIndex: 20 }}>
+      <div style={{ width: '80px', flexShrink: 0, height: '100%', backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', boxSizing: 'border-box', zIndex: 20 }}>
         
         {/* 上方：展開按鈕 */}
         <button
