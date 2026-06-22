@@ -291,17 +291,18 @@ export default function MapArea({
     };
 
     useEffect(() => {
-    if (mapAreaWrapperRef.current && floatingPanelRef.current) {
-      const wrapperRect = mapAreaWrapperRef.current.getBoundingClientRect();
-      const panelRect = floatingPanelRef.current.getBoundingClientRect();
-      // 重新計算當下最新的最大邊界
-      const maxX = wrapperRect.width - panelRect.width - 5;
+      if (mapAreaWrapperRef.current && floatingPanelRef.current) {
+        const wrapperRect = mapAreaWrapperRef.current.getBoundingClientRect();
+        const panelRect = floatingPanelRef.current.getBoundingClientRect();
+        // 重新計算當下最新的最大邊界
+        const maxX = wrapperRect.width - panelRect.width - 5;
 
-      // 如果目前的 X 座標已經超出新的邊界，就強制推回到邊緣
-      if (panelPos.x > maxX) {
-        setPanelPos(prev => ({ ...prev, x: maxX < 5 ? 5 : maxX }));
+        // 如果目前的 X 座標已經超出新的邊界，就強制推回到邊緣
+        if (panelPos.x > maxX) {
+          setPanelPos(prev => ({ ...prev, x: maxX < 5 ? 5 : maxX }));
+        }
       }
-    }
+    }, [sidebarWidth, isCollapsed]);
 
     const handleMouseUp = () => setIsDragging(false);
     if (isDragging) {
