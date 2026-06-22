@@ -76,13 +76,6 @@ export default function MapArea({
   // 👇 這裡加上 radiusCenter
   }, [appMode, distPoints.length, radiusCenter]);
 
-    // 當進入範圍模式，或是剛進入測距模式 (0個點) 時，視窗靠右下角
-    if (appMode === 'radius' || (appMode === 'distance' && distPoints.length === 0)) {
-      // 使用 setTimeout 等待 React 渲染出視窗後，再抓取寬高並移動
-      setTimeout(moveToBottomRight, 50);
-    }
-  }, [appMode, distPoints.length]);
-
   useEffect(() => {
     if (window.google && window.google.maps) { setIsMapReady(true); return; }
     window.__initGoogleMaps = () => setIsMapReady(true);
@@ -472,7 +465,7 @@ export default function MapArea({
 
       {/* 🌟 瘦身後的範圍探索功能視窗 */}
       {appMode === 'radius' && (
-        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}><div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}><div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}><div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '288px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
             <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#581c87', fontSize: '16px' }}><Target size={20} color="#9333ea"/> 範圍探索</h3>
             <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding: 0 }}><X size={20}/></button>
