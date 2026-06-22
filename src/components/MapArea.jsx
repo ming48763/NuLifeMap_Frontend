@@ -322,7 +322,7 @@ export default function MapArea({
           markerContainer.appendChild(dotDiv);
           markerContainer.appendChild(popupDiv);
 
-          const marker = new AdvancedMarkerElement({ position: { lat: parseFloat(firstItem.lat), lng: parseFloat(firstItem.lng) }, map: mapInstanceRef.current, content: markerContainer });
+          const marker = new AdvancedMarkerElement({ position: { lat: parseFloat(firstItem.lat), lng: parseFloat(firstItem.lng) }, map: mapInstanceRef.current, content: markerContainer, gmpClickable: true});
           marker._item = firstItem; marker._group = group; marker._dotDiv = dotDiv; marker._popupDiv = popupDiv; marker._isPinned = false; 
 
           const openPopup = (keepOthers = false) => {
