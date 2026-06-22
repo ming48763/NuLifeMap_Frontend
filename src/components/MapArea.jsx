@@ -355,7 +355,7 @@ export default function MapArea({
           markerContainer.addEventListener('mouseenter', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') openPopup(true); });
           markerContainer.addEventListener('mouseleave', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') closePopup(); });
 
-          marker.addListener('click', () => {
+          marker.addListener('gmp-click', () => {
             const state = appStateRef.current;
             if (state.mode === 'distance') {
               if (state.distPoints.length < 2) setDistPoints([...state.distPoints, firstItem]);
