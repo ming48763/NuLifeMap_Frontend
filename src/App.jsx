@@ -99,7 +99,10 @@ export default function App() {
         appMode={appMode}
         setAppMode={setAppMode}
         onOpenModal={() => setIsModalOpen(true)}
-        onFocusItem={(item) => setFocusedItem(item)} 
+        onFocusItem={(item) => {
+          setFocusedItem(item);
+          setAppMode('normal'); 
+        }}
       />
       
       <MapArea 
