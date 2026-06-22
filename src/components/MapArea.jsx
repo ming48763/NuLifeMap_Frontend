@@ -204,6 +204,7 @@ export default function MapArea({
     circleRef.current.setRadius(radiusMeters);
   }, [radiusCenter, radiusMeters, appMode, isMapReady]);
 
+  // 🌟 修改一：圖釘顏色與灰階判定
   useEffect(() => {
     if (!isMapReady || markersRef.current.length === 0) return;
     markersRef.current.forEach(m => {
@@ -213,19 +214,25 @@ export default function MapArea({
       const dot = m._dotDiv; 
       let defaultColor = item.type === 'housing' ? '#10b981' : (item.type === 'custom' ? '#a855f7' : '#3b82f6'); 
       let isSelected = false;
-      let isOutsideRadius = false;
+      let isGrayedOut = false; // 🌟 統一管理灰階狀態
 
       if (appMode === 'distance') {
         isSelected = distPoints.some(p => parseFloat(p.lat) === parseFloat(item.lat) && parseFloat(p.lng) === parseFloat(item.lng));
+        // 🎯 需求 2: 測距模式選滿兩個點後，未選取的變成灰色
+        if (distPoints.length === 2 && !isSelected) {
+          isGrayedOut = true;
+        }
       } else if (appMode === 'radius') {
         if (radiusCenter) {
           isSelected = (parseFloat(radiusCenter.lat) === parseFloat(item.lat) && parseFloat(radiusCenter.lng) === parseFloat(item.lng));
           const centerLatLng = new window.google.maps.LatLng(parseFloat(radiusCenter.lat), parseFloat(radiusCenter.lng));
           const mLatLng = new window.google.maps.LatLng(parseFloat(item.lat), parseFloat(item.lng));
           const dist = window.google.maps.geometry.spherical.computeDistanceBetween(centerLatLng, mLatLng);
-          if (dist > radiusMeters) isOutsideRadius = true;
+          if (dist > radiusMeters) isGrayedOut = true;
         }
       }
+
+      m._isGrayedOut = isGrayedOut; // 🌟 存入 marker 物件中，讓懸浮事件判斷用
 
       if (isSelected) {
         dot.style.backgroundColor = '#ef4444'; dot.style.transform = 'scale(1.25)'; m.zIndex = 1000;
@@ -233,7 +240,7 @@ export default function MapArea({
         dot.style.backgroundColor = defaultColor; dot.style.transform = 'scale(1)'; m.zIndex = m._isPinned ? 9999 : null; 
       }
 
-      if (isOutsideRadius) {
+      if (isGrayedOut) {
         m.content.style.filter = 'grayscale(100%)'; m.content.style.opacity = '0.35';
       } else {
         m.content.style.filter = 'none'; m.content.style.opacity = '1';
@@ -352,9 +359,20 @@ export default function MapArea({
           popupDiv.querySelector('.close-popup-btn').addEventListener('click', (e) => { e.stopPropagation(); marker._isPinned = false; closePopup(); });
           popupDiv.addEventListener('click', (e) => e.stopPropagation());
 
-          markerContainer.addEventListener('mouseenter', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') openPopup(true); });
-          markerContainer.addEventListener('mouseleave', () => { if (!marker._isPinned && appStateRef.current.mode === 'normal') closePopup(); });
-
+          // 🌟 修改二：更聰明的滑鼠懸停邏輯
+          markerContainer.addEventListener('mouseenter', () => { 
+            if (marker._isPinned) return;
+            
+            // 🎯 需求 4 & 需求 2 延伸: 如果該圖標已經被變成灰色（半徑外，或是測距已滿2點），則拒絕顯示浮窗
+            if (marker._isGrayedOut) return; 
+            
+            // 🎯 需求 1: 移除 mode === 'normal' 的限制，讓特殊模式下點擊前也能預覽資訊！
+            openPopup(true); 
+          });
+          
+          markerContainer.addEventListener('mouseleave', () => { 
+            if (!marker._isPinned) closePopup(); 
+          });
           marker.addListener('gmp-click', () => {
             const state = appStateRef.current;
             if (state.mode === 'distance') {
@@ -413,7 +431,17 @@ export default function MapArea({
           {distPoints.length === 2 && !distResult && <Loader2 className="animate-spin" color="#2563eb"/>}
           {distResult && <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', color: '#1e3a8a', fontWeight: 'bold', fontSize: '16px', border: '1px solid #bfdbfe', width: '100%', textAlign: 'center' }}>{distResult}</div>}
           {distPoints.length === 2 && (
-            <button onClick={() => { markersRef.current.forEach(m => { m._isPinned = false; if (m._closePopup) m._closePopup(); }); setDistPoints([]); setDistResult(null); if(directionsRendererRef.current) directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; if(boundsRectRef.current) boundsRectRef.current.setMap(null); boundsRectRef.current = null; setPanelPos({ x: 24, y: 24 }); }} style={{ marginTop: '8px', padding: '8px 24px', border: 'none', borderRadius: '8px', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>重新測量</button>
+            <button onClick={() => { 
+              markersRef.current.forEach(m => { m._isPinned = false; if (m._closePopup) m._closePopup(); }); 
+              setDistPoints([]); 
+              setDistResult(null); 
+              setInfoBoxes([]); // 🎯 需求 3: 清除上一次的起點與目的地浮窗
+              if(directionsRendererRef.current) directionsRendererRef.current.setMap(null); 
+              directionsRendererRef.current = null; 
+              if(boundsRectRef.current) boundsRectRef.current.setMap(null); 
+              boundsRectRef.current = null; 
+              setPanelPos({ x: 24, y: 24 }); 
+            }} style={{ marginTop: '8px', padding: '8px 24px', border: 'none', borderRadius: '8px', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>重新測量</button>
           )}
         </div>
       )}
