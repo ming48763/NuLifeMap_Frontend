@@ -269,6 +269,9 @@ export default function MapArea({
     });
   }, [appMode, distPoints, radiusCenter, radiusMeters, isMapReady, jobs]);
 
+  // ==========================================
+  // 🌟 1. 拖曳監聽 (乾淨版)
+  // ==========================================
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
@@ -303,19 +306,17 @@ export default function MapArea({
   }, [isDragging, dragOffset]);
 
   // ==========================================
-  // 🌟 2. 全新升級：自動監聽地圖大小，防止面板出界
+  // 🌟 2. ResizeObserver 自動推擠防護罩
   // ==========================================
   useEffect(() => {
     if (!mapAreaWrapperRef.current) return;
 
-    // 使用瀏覽器內建的 ResizeObserver，只要地圖寬度改變就會觸發！
     const resizeObserver = new ResizeObserver(() => {
       if (mapAreaWrapperRef.current && floatingPanelRef.current) {
         const wrapperRect = mapAreaWrapperRef.current.getBoundingClientRect();
         const panelRect = floatingPanelRef.current.getBoundingClientRect();
         const maxX = wrapperRect.width - panelRect.width - 5;
 
-        // 檢查如果面板已經超出新的邊界，就把它推回來
         setPanelPos(prev => {
           if (prev.x > maxX) {
             return { ...prev, x: maxX < 5 ? 5 : maxX };
@@ -328,14 +329,11 @@ export default function MapArea({
     resizeObserver.observe(mapAreaWrapperRef.current);
 
     return () => resizeObserver.disconnect();
-  }, []); // 獨立掛載，不依賴外部變數
-    const handleMouseUp = () => setIsDragging(false);
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove); window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); };
-  }, [isDragging, dragOffset]);
+  }, []);
 
+  // ==========================================
+  // 🌟 3. 滑鼠按下事件 
+  // ==========================================
   const handleMouseDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return; 
     setIsDragging(true);
