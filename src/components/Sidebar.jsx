@@ -15,6 +15,43 @@ export default function Sidebar({
   const [openCategory, setOpenCategory] = useState('housing');
   const [openItemIdx, setOpenItemIdx] = useState(null); 
 
+  // ==========================================
+  // 🌟 請把這整段「拖曳瘦身邏輯」補在這裡！
+  // ==========================================
+  const [sidebarWidth, setSidebarWidth] = useState(420); 
+  const isResizing = useRef(false);
+
+  const startResizing = useCallback(() => {
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none'; 
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    if (isResizing.current) {
+      isResizing.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    }
+  }, []);
+
+  const resize = useCallback((e) => {
+    if (isResizing.current) {
+      let newWidth = e.clientX;
+      if (newWidth < 280) newWidth = 280; 
+      if (newWidth > 600) newWidth = 600; 
+      setSidebarWidth(newWidth);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', resize);
+    window.addEventListener('mouseup', stopResizing);
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [resize, stopResizing]);
   const groupedData = {
     housing: { title: '🏠 租屋資訊', color: '#10b981', items: jobs.filter(j => j.type === 'housing') },
     job: { title: '💼 職缺資訊', color: '#3b82f6', items: jobs.filter(j => j.type === 'job') },
