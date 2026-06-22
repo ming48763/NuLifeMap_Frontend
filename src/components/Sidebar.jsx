@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Loader2, ChevronDown, ChevronRight, ExternalLink, Clock, Plus, Route, Target, LogOut } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Loader2, ChevronDown, ChevronRight, ExternalLink, Clock, Plus, Route, Target, LogOut, Trash2  } from 'lucide-react';
 
 export default function Sidebar({ 
   user,        // 🌟 接收使用者資料
@@ -9,7 +9,8 @@ export default function Sidebar({
   appMode, 
   setAppMode, 
   onOpenModal, 
-  onFocusItem 
+  onFocusItem,
+  onDeleteItem // 🌟 2. 接收從 App.jsx 傳來的刪除函式
 }) {
   const [openCategory, setOpenCategory] = useState('housing');
   const [openItemIdx, setOpenItemIdx] = useState(null); 
@@ -30,10 +31,11 @@ export default function Sidebar({
   };
 
   return (
-    <div style={{ width: '420px', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', borderRight: '1px solid #e2e8f0', zIndex: 20 }}>
+    <div style={{ width: `${sidebarWidth}px`, flexShrink: 0, overflowX: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', borderRight: '1px solid #e2e8f0', zIndex: 20, position: 'relative' }}>
+      {/* 🌟 1. 最外層套用 sidebarWidth、flexShrink: 0 防變形，並設定 position: relative 讓拉桿定位 */}
       {/* 標題區 */}
       <div style={{ padding: '24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', zIndex: 10 }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#2563eb', margin: '0 0 8px 0' }}>NuLifeMap 新生活藍圖</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#2563eb', margin: '0 0 8px 0', whiteSpace: 'nowrap' }}>NuLifeMap 新生活藍圖</h1>
         <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
           {loadingData ? "正在載入資料..." : `共找到 ${jobs.length} 筆資料`}
         </p>
@@ -46,14 +48,11 @@ export default function Sidebar({
         ) : (
           Object.entries(groupedData).map(([catKey, category]) => (
             <div key={catKey} style={{ marginBottom: '12px' }}>
-              <button
-                onClick={() => setOpenCategory(openCategory === catKey ? null : catKey)}
-                style={{ width: '100%', padding: '16px', backgroundColor: openCategory === catKey ? '#eff6ff' : '#ffffff', border: `1px solid ${openCategory === catKey ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-              >
-                <span style={{ fontWeight: 'bold', fontSize: '16px', color: category.color }}>
+              <button onClick={() => setOpenCategory(openCategory === catKey ? null : catKey)} style={{ width: '100%', padding: '16px', backgroundColor: openCategory === catKey ? '#eff6ff' : '#ffffff', border: `1px solid ${openCategory === catKey ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '16px', color: category.color, whiteSpace: 'nowrap' }}>
                   {category.title} <span style={{ color: '#64748b', fontSize: '14px', marginLeft: '6px' }}>({category.items.length})</span>
                 </span>
-                {openCategory === catKey ? <ChevronDown size={20} color={category.color} /> : <ChevronRight size={20} color="#94a3b8" />}
+                {openCategory === catKey ? <ChevronDown size={20} color={category.color} style={{ flexShrink: 0 }} /> : <ChevronRight size={20} color="#94a3b8" style={{ flexShrink: 0 }} />}
               </button>
 
               {openCategory === catKey && (
@@ -71,11 +70,29 @@ export default function Sidebar({
                         <div 
                           key={uniqueKey} 
                           onClick={() => handleItemClick(item, uniqueKey)}
-                          style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '12px', borderLeft: `4px solid ${category.color}`, borderTop: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', marginBottom: '10px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.05)' }}
+                          // 🌟 加入 position: 'relative' 以便垃圾桶絕對定位
+                          style={{ position: 'relative', padding: '16px', backgroundColor: '#ffffff', borderRadius: '12px', borderLeft: `4px solid ${category.color}`, borderTop: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', marginBottom: '10px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: isExpanded ? '0 4px 6px -1px rgba(0,0,0,0.1)' : '0 1px 2px rgba(0,0,0,0.05)' }}
                         >
-                          <h4 style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '15px', margin: '0 0 4px 0' }}>{titleStr}</h4>
+
+                          {/* 🌟 垃圾桶按鈕：固定在卡片右上角，且點擊使用 onDeleteItem */}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteItem(item._id); 
+                            }}
+                            style={{ position: 'absolute', top: '14px', right: '14px', background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px', borderRadius: '6px', transition: 'background-color 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} 
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="刪除此地點"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+
+                          {/* 標題增加 paddingRight 避免與垃圾桶重疊 */}
+                          <h4 style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '15px', margin: '0 0 4px 0', paddingRight: '28px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titleStr}</h4>
                           <p style={{ color: '#64748b', fontSize: '13px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.address}</p>
                           
+                          {/* ... 中間展開細節完全不動 ... */}
                           {isExpanded && (
                             <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1', fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {item.type === 'housing' && (<><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#ea580c', fontWeight: 'bold' }}>{item.houseInfo?.price}</span><span>{item.houseInfo?.area}</span></div><div>仲介/屋主：{item.houseInfo?.is_agent}</div></>)}
@@ -92,7 +109,7 @@ export default function Sidebar({
                                 </>
                               )}
                               {sourceUrl && (
-                                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '8px 12px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', width: 'fit-content' }}>
+                                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '8px 12px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', width: 'fit-content', whiteSpace: 'nowrap' }}>
                                   <ExternalLink size={14} /> 前往相關網頁
                                 </a>
                               )}
@@ -109,10 +126,9 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 🌟 底部操作與使用者資訊區塊 */}
+      {/* 底部操作區塊 - 原有內容不變 */}
       <div style={{ padding: '16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', zIndex: 10 }}>
-        
-        {/* 工具按鈕 */}
+        {/* ... 原有底部內容不變 ... */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <button onClick={() => { setAppMode('normal'); onOpenModal(); }} style={{ flex: 1, padding: '10px 0', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', border: 'none', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', cursor: 'pointer', transition: 'background-color 0.2s', fontSize: '13px' }}>
             <Plus size={16} /> 新增
@@ -125,21 +141,37 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* 使用者卡片 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={user?.avatar} alt="avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e2e8f0', objectFit: 'cover' }} />
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>{user?.name}</div>
-              <div style={{ color: '#64748b', fontSize: '12px' }}>@{user?.account}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+            <img src={user?.avatar} alt="avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e2e8f0', objectFit: 'cover', flexShrink: 0 }} />
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user?.name}</div>
+              <div style={{ color: '#64748b', fontSize: '12px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>@{user?.account}</div>
             </div>
           </div>
-          <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'} title="登出">
+          <button onClick={onLogout} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'} title="登出">
             <LogOut size={18} />
           </button>
         </div>
-
       </div>
+
+      {/* 🌟 拖曳瘦身的隱形把手 */}
+      <div 
+        onMouseDown={startResizing}
+        style={{
+          position: 'absolute',
+          top: 0, 
+          right: 0, 
+          width: '6px', 
+          height: '100%',
+          cursor: 'col-resize',
+          backgroundColor: 'transparent',
+          zIndex: 100,
+          transition: 'background-color 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = '#cbd5e1'}
+        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+      />
     </div>
   );
 }

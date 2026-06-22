@@ -88,6 +88,30 @@ export default function App() {
     }} />;
   }
 
+  // 🌟 前端刪除邏輯
+  const handleDeleteItem = async (itemId) => {
+    // 加上防呆確認，避免誤刪
+    if (!window.confirm('確定要刪除這個地點嗎？')) return;
+    
+    try {
+      const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:3000';
+      const response = await fetch(`${backendUrl}/api/markers/${itemId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // 成功後，直接從前端陣列中過濾掉該筆資料，畫面就會瞬間更新！
+        setJobs(prev => prev.filter(job => job._id !== itemId));
+        // 如果剛好聚焦在該地點，就重置模式
+        setAppMode('normal');
+      } else {
+        alert('刪除失敗，請稍後再試');
+      }
+    } catch (error) {
+      console.error('刪除時發生錯誤:', error);
+    }
+  };
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif' }}>
       
@@ -103,6 +127,7 @@ export default function App() {
           setFocusedItem(item);
           setAppMode('normal'); 
         }}
+        onDeleteItem={handleDeleteItem}
       />
       
       <MapArea 
