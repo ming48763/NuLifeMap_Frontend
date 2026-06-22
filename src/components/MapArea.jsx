@@ -55,6 +55,26 @@ export default function MapArea({
     }).join('');
   };
 
+  // 🌟 新增：功能視窗自動靠右下角的邏輯
+  useEffect(() => {
+    const moveToBottomRight = () => {
+      if (mapAreaWrapperRef.current && floatingPanelRef.current) {
+        const mapW = mapAreaWrapperRef.current.offsetWidth;
+        const mapH = mapAreaWrapperRef.current.offsetHeight;
+        const panelW = floatingPanelRef.current.offsetWidth;
+        const panelH = floatingPanelRef.current.offsetHeight;
+        // 計算右下角位置 (預留 24px 邊距)
+        setPanelPos({ x: Math.max(24, mapW - panelW - 24), y: Math.max(24, mapH - panelH - 24) });
+      }
+    };
+
+    // 當進入範圍模式，或是剛進入測距模式 (0個點) 時，視窗靠右下角
+    if (appMode === 'radius' || (appMode === 'distance' && distPoints.length === 0)) {
+      // 使用 setTimeout 等待 React 渲染出視窗後，再抓取寬高並移動
+      setTimeout(moveToBottomRight, 50);
+    }
+  }, [appMode, distPoints.length]);
+
   useEffect(() => {
     if (window.google && window.google.maps) { setIsMapReady(true); return; }
     window.__initGoogleMaps = () => setIsMapReady(true);
@@ -359,15 +379,20 @@ export default function MapArea({
           popupDiv.querySelector('.close-popup-btn').addEventListener('click', (e) => { e.stopPropagation(); marker._isPinned = false; closePopup(); });
           popupDiv.addEventListener('click', (e) => e.stopPropagation());
 
-          // 🌟 修改二：更聰明的滑鼠懸停邏輯
+          // 🌟 優化：智慧懸停邏輯 (滿足需求 4)
           markerContainer.addEventListener('mouseenter', () => { 
             if (marker._isPinned) return;
-            
-            // 🎯 需求 4 & 需求 2 延伸: 如果該圖標已經被變成灰色（半徑外，或是測距已滿2點），則拒絕顯示浮窗
             if (marker._isGrayedOut) return; 
             
-            // 🎯 需求 1: 移除 mode === 'normal' 的限制，讓特殊模式下點擊前也能預覽資訊！
+            // 🎯 如果是測距模式且已經選滿 2 個點，暫時關閉懸停顯示
+            const state = appStateRef.current;
+            if (state.mode === 'distance' && state.distPoints.length === 2) return;
+
             openPopup(true); 
+          });
+          
+          markerContainer.addEventListener('mouseleave', () => { 
+            if (!marker._isPinned) closePopup(); 
           });
           
           markerContainer.addEventListener('mouseleave', () => { 
@@ -420,48 +445,40 @@ export default function MapArea({
 
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
 
+      {/* 🌟 瘦身後的測距模式功能視窗 */}
       {appMode === 'distance' && (
-        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '20px 28px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', minWidth: '340px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-          <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '8px', cursor: isDragging ? 'grabbing' : 'grab' }}>
-            <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#1e3a8a', fontSize: '18px' }}><Route size={22} color="#2563eb"/> 兩點導航測距</h3>
-            <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8' }}><X size={22}/></button>
+        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '240px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '4px', cursor: isDragging ? 'grabbing' : 'grab' }}>
+            <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#1e3a8a', fontSize: '16px' }}><Route size={20} color="#2563eb"/> 兩點測距</h3>
+            <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding: 0 }}><X size={20}/></button>
           </div>
-          {distPoints.length === 0 && <p style={{ margin: 0, color: '#475569', fontSize: '15px', fontWeight: '500' }}>👆 請點選地圖上的「第一個」圖標</p>}
-          {distPoints.length === 1 && <p style={{ margin: 0, color: '#475569', fontSize: '15px', fontWeight: '500' }}>✌️ 請點選地圖上的「第二個」圖標</p>}
-          {distPoints.length === 2 && !distResult && <Loader2 className="animate-spin" color="#2563eb"/>}
-          {distResult && <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', color: '#1e3a8a', fontWeight: 'bold', fontSize: '16px', border: '1px solid #bfdbfe', width: '100%', textAlign: 'center' }}>{distResult}</div>}
+          {distPoints.length === 0 && <p style={{ margin: 0, color: '#475569', fontSize: '14px', fontWeight: '500', textAlign: 'center' }}>👆 請點選地圖<br/>「第一個」圖標</p>}
+          {distPoints.length === 1 && <p style={{ margin: 0, color: '#475569', fontSize: '14px', fontWeight: '500', textAlign: 'center' }}>✌️ 請點選地圖<br/>「第二個」圖標</p>}
+          {distPoints.length === 2 && !distResult && <Loader2 className="animate-spin" color="#2563eb" size={24}/>}
+          {distResult && <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '12px', color: '#1e3a8a', fontWeight: 'bold', fontSize: '14px', border: '1px solid #bfdbfe', width: '100%', textAlign: 'center', lineHeight: '1.5' }}>{distResult}</div>}
           {distPoints.length === 2 && (
-            <button onClick={() => { 
-              markersRef.current.forEach(m => { m._isPinned = false; if (m._closePopup) m._closePopup(); }); 
-              setDistPoints([]); 
-              setDistResult(null); 
-              setInfoBoxes([]); // 🎯 需求 3: 清除上一次的起點與目的地浮窗
-              if(directionsRendererRef.current) directionsRendererRef.current.setMap(null); 
-              directionsRendererRef.current = null; 
-              if(boundsRectRef.current) boundsRectRef.current.setMap(null); 
-              boundsRectRef.current = null; 
-              setPanelPos({ x: 24, y: 24 }); 
-            }} style={{ marginTop: '8px', padding: '8px 24px', border: 'none', borderRadius: '8px', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>重新測量</button>
+            <button onClick={() => { markersRef.current.forEach(m => { m._isPinned = false; if (m._closePopup) m._closePopup(); }); setDistPoints([]); setDistResult(null); setInfoBoxes([]); if(directionsRendererRef.current) directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; if(boundsRectRef.current) boundsRectRef.current.setMap(null); boundsRectRef.current = null; }} style={{ marginTop: '4px', padding: '8px', width: '100%', border: 'none', borderRadius: '8px', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>重新測量</button>
           )}
         </div>
       )}
 
+      {/* 🌟 瘦身後的範圍探索功能視窗 */}
       {appMode === 'radius' && (
-        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '20px 28px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '380px', userSelect: isDragging ? 'none' : 'auto' }}>
+        <div ref={floatingPanelRef} style={{ position: 'absolute', top: `${panelPos.y}px`, left: `${panelPos.x}px`, backgroundColor: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '14px', width: '240px', userSelect: isDragging ? 'none' : 'auto', transition: 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div onMouseDown={handleMouseDown} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab' }}>
-            <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#581c87', fontSize: '18px' }}><Target size={22} color="#9333ea"/> 範圍探索模式</h3>
-            <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8' }}><X size={22}/></button>
+            <h3 style={{ fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#581c87', fontSize: '16px' }}><Target size={20} color="#9333ea"/> 範圍探索</h3>
+            <button onClick={() => setAppMode('normal')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding: 0 }}><X size={20}/></button>
           </div>
           {!radiusCenter ? (
-            <p style={{ margin: 0, color: '#475569', fontSize: '15px', textAlign: 'center', padding: '12px 0', fontWeight: '500' }}>🎯 請點擊地圖上的一個圖標作為探索中心</p>
+            <p style={{ margin: 0, color: '#475569', fontSize: '14px', textAlign: 'center', padding: '8px 0', fontWeight: '500' }}>🎯 請點擊地圖上<br/>一個圖標作為中心</p>
           ) : (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#faf5ff', padding: '12px', borderRadius: '8px', fontSize: '15px', color: '#6b21a8', border: '1px solid #e9d5ff' }}>
-                <MapPin size={18}/> <b>中心點：</b> {radiusCenter.customInfo?.title || radiusCenter.houseInfo?.title || radiusCenter.jobInfo?.jobTitle || '已選擇'}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', backgroundColor: '#faf5ff', padding: '10px', borderRadius: '8px', fontSize: '13px', color: '#6b21a8', border: '1px solid #e9d5ff', wordBreak: 'break-all' }}>
+                <MapPin size={16} style={{ flexShrink: 0, marginTop: '2px' }}/> <div><b>中心：</b><br/>{radiusCenter.customInfo?.title || radiusCenter.houseInfo?.title || radiusCenter.jobInfo?.jobTitle || '已選擇'}</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <label style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>探索半徑 <span style={{ backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '16px', fontSize: '14px', color: '#475569' }}>{radiusMeters >= 1000 ? (radiusMeters/1000).toFixed(1) + ' 公里' : radiusMeters + ' 公尺'}</span></label>
-                <input type="range" min="100" max="10000" step="100" value={radiusMeters} onChange={(e) => setRadiusMeters(Number(e.target.value))} style={{ cursor: 'pointer', accentColor: '#9333ea', height: '6px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>半徑 <span style={{ backgroundColor: '#f1f5f9', padding: '4px 8px', borderRadius: '16px', fontSize: '12px', color: '#475569' }}>{radiusMeters >= 1000 ? (radiusMeters/1000).toFixed(1) + ' km' : radiusMeters + ' m'}</span></label>
+                <input type="range" min="100" max="10000" step="100" value={radiusMeters} onChange={(e) => setRadiusMeters(Number(e.target.value))} style={{ cursor: 'pointer', accentColor: '#9333ea', height: '6px', width: '100%' }} />
               </div>
             </>
           )}
