@@ -15,7 +15,7 @@ export default function App() {
   const [appMode, setAppMode] = useState('normal'); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [focusedItem, setFocusedItem] = useState(null); 
-  
+
   // 🌟 新增：由 App 統一管理側邊欄的寬度與收合狀態
   const [sidebarWidth, setSidebarWidth] = useState(420); 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -117,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif', '--sidebar-width': isCollapsed ? '0px' : `${sidebarWidth}px` }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif', '--sidebar-width': isCollapsed ? '80px' : `${sidebarWidth}px` }}>
       
       <Sidebar 
         user={user} 

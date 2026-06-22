@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Loader2, ChevronDown, ChevronRight, ExternalLink, Clock, Plus, Route, Target, LogOut, Trash2  } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronRight, ChevronLeft, ExternalLink, Clock, Plus, Route, Target, LogOut, Trash2  } from 'lucide-react';
 
 export default function Sidebar({ 
   user,        // 🌟 接收使用者資料
@@ -19,10 +19,9 @@ export default function Sidebar({
   const [openCategory, setOpenCategory] = useState('housing');
   const [openItemIdx, setOpenItemIdx] = useState(null); 
 
-  // ==========================================
-  // 🌟 請把這整段「拖曳瘦身邏輯」補在這裡！
-  // ========================================== 
   const isResizing = useRef(false);
+  const [willCollapse, setWillCollapse] = useState(false); // 控制畫面提示
+  const willCollapseRef = useRef(false); // 讓事件即時讀取狀態
 
   const startResizing = useCallback(() => {
     isResizing.current = true;
@@ -30,36 +29,41 @@ export default function Sidebar({
     document.body.style.userSelect = 'none'; 
   }, []);
 
+  const resize = useCallback((e) => {
+    if (isResizing.current) {
+      let newWidth = e.clientX;
+      if (newWidth > 450) newWidth = 450; 
+      
+      // 🎯 當小於 260 時，不立刻收合，而是進入「準備收合」狀態
+      if (newWidth < 260) {
+        if (!willCollapseRef.current) {
+          willCollapseRef.current = true;
+          setWillCollapse(true);
+        }
+        setSidebarWidth(260); // 視覺上鎖定在 260px，避免真的縮到 0
+      } else {
+        if (willCollapseRef.current) {
+          willCollapseRef.current = false;
+          setWillCollapse(false);
+        }
+        setSidebarWidth(newWidth);
+      }
+    }
+  }, [setSidebarWidth]);
+
+  // 🎯 使用者「放開滑鼠」的那一刻，才決定要不要收合
   const stopResizing = useCallback(() => {
     if (isResizing.current) {
       isResizing.current = false;
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
-    }
-  }, []);
 
-  const resize = useCallback((e) => {
-    if (isResizing.current) {
-      let newWidth = e.clientX;
-      
-      // 🎯 需求 1：最多拖曳到原本的 420px
-      if (newWidth > 420) newWidth = 420; 
-      
-      // 🎯 需求 2：向左拖曳小於 200px 時，觸發收合模式
-      if (newWidth < 260) {
+      if (willCollapseRef.current) {
         setIsCollapsed(true);
-        setSidebarWidth(420); // 魔法：收合時把寬度設回預設值，下次展開才會是漂亮的寬度
-
-        // 觸發收合後立刻強制中斷拖曳狀態，避免滑鼠還在拖曳中產生 Bug
-        if (isResizing.current) {
-          isResizing.current = false;
-          document.body.style.cursor = 'default';
-          document.body.style.userSelect = 'auto';
-        }
-        return; 
+        setSidebarWidth(420); // 記憶原本寬度
+        willCollapseRef.current = false;
+        setWillCollapse(false);
       }
-      
-      setSidebarWidth(newWidth);
     }
   }, [setIsCollapsed, setSidebarWidth]);
 
@@ -88,25 +92,56 @@ export default function Sidebar({
   };
 
   // 🎯 需求 2：如果是收合模式，只顯示一顆浮動的展開按鈕，讓出最大地圖空間
+  // 🎯 如果是收合模式，顯示 80px 的「迷你側邊欄」
   if (isCollapsed) {
     return (
-      <div style={{ width: 0, position: 'relative', zIndex: 100 }}>
+      <div style={{ width: '80px', flexShrink: 0, height: '100%', backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', zIndex: 20 }}>
+        
+        {/* 上方：展開按鈕 */}
         <button
           onClick={() => setIsCollapsed(false)}
           title="展開側邊欄"
-          style={{
-            position: 'absolute', top: '24px', left: '24px',
-            backgroundColor: '#2563eb', color: 'white', border: 'none',
-            borderRadius: '50%', width: '48px', height: '48px',
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
-            transition: 'transform 0.2s, background-color 0.2s'
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          style={{ backgroundColor: '#eff6ff', color: '#2563eb', border: 'none', borderRadius: '16px', width: '48px', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#dbeafe'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#eff6ff'}
         >
           <ChevronRight size={28} />
         </button>
+
+        <div style={{ flex: 1 }} />
+
+        {/* 下方：三大功能快捷鍵 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', alignItems: 'center' }}>
+          <button
+            onClick={() => { setAppMode('normal'); onOpenModal(); }}
+            title="新增"
+            style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#2563eb', color: 'white', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 4px 6px -1px rgba(37,99,235,0.3)' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <Plus size={24} />
+          </button>
+          
+          <button
+            onClick={() => handleModeClick('distance')}
+            title="測距"
+            style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: appMode === 'distance' ? '#eff6ff' : '#f8fafc', color: appMode === 'distance' ? '#2563eb' : '#64748b', border: appMode === 'distance' ? '2px solid #bfdbfe' : '1px solid #e2e8f0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = '#94a3b8'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = appMode === 'distance' ? '#bfdbfe' : '#e2e8f0'}
+          >
+            <Route size={22} />
+          </button>
+
+          <button
+            onClick={() => handleModeClick('radius')}
+            title="範圍"
+            style={{ width: '48px', height: '48px', borderRadius: '16px', backgroundColor: appMode === 'radius' ? '#faf5ff' : '#f8fafc', color: appMode === 'radius' ? '#9333ea' : '#64748b', border: appMode === 'radius' ? '2px solid #e9d5ff' : '1px solid #e2e8f0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = '#94a3b8'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = appMode === 'radius' ? '#e9d5ff' : '#e2e8f0'}
+          >
+            <Target size={22} />
+          </button>
+        </div>
       </div>
     );
   }
@@ -235,6 +270,17 @@ export default function Sidebar({
           </button>
         </div>
       </div>
+
+      {willCollapse && (
+        <div style={{
+          position: 'absolute', inset: 0, backgroundColor: 'rgba(239, 246, 255, 0.85)',
+          zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          color: '#2563eb', backdropFilter: 'blur(4px)', transition: 'opacity 0.2s'
+        }}>
+          <ChevronLeft size={64} style={{ opacity: 0.8 }} />
+          <h2 style={{ fontWeight: '900', marginTop: '16px', letterSpacing: '2px' }}>放開以收合側邊欄</h2>
+        </div>
+      )}
 
       {/* 🌟 拖曳瘦身的隱形把手 */}
       <div 
