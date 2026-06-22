@@ -11,14 +11,17 @@ export default function Sidebar({
   onOpenModal, 
   onFocusItem,
   onDeleteItem // 🌟 2. 接收從 App.jsx 傳來的刪除函式
+  sidebarWidth, 
+  setSidebarWidth, 
+  isCollapsed, 
+  setIsCollapsed
 }) {
   const [openCategory, setOpenCategory] = useState('housing');
   const [openItemIdx, setOpenItemIdx] = useState(null); 
 
   // ==========================================
   // 🌟 請把這整段「拖曳瘦身邏輯」補在這裡！
-  // ==========================================
-  const [sidebarWidth, setSidebarWidth] = useState(420); 
+  // ========================================== 
   const isResizing = useRef(false);
 
   const startResizing = useCallback(() => {
@@ -38,11 +41,26 @@ export default function Sidebar({
   const resize = useCallback((e) => {
     if (isResizing.current) {
       let newWidth = e.clientX;
-      if (newWidth < 280) newWidth = 280; 
-      if (newWidth > 600) newWidth = 600; 
+      
+      // 🎯 需求 1：最多拖曳到原本的 420px
+      if (newWidth > 420) newWidth = 420; 
+      
+      // 🎯 需求 2：向左拖曳小於 200px 時，觸發收合模式
+      if (newWidth < 200) {
+        setIsCollapsed(true);
+        // 觸發收合後立刻強制中斷拖曳狀態，避免滑鼠還在拖曳中產生 Bug
+        if (isResizing.current) {
+          isResizing.current = false;
+          document.body.style.cursor = 'default';
+          document.body.style.userSelect = 'auto';
+        }
+        return; 
+      }
+      
+      if (newWidth < 280) newWidth = 280; // 限制最小瘦身寬度，避免版面太擠
       setSidebarWidth(newWidth);
     }
-  }, []);
+  }, [setIsCollapsed, setSidebarWidth]);
 
   useEffect(() => {
     window.addEventListener('mousemove', resize);
@@ -52,6 +70,7 @@ export default function Sidebar({
       window.removeEventListener('mouseup', stopResizing);
     };
   }, [resize, stopResizing]);
+
   const groupedData = {
     housing: { title: '🏠 租屋資訊', color: '#10b981', items: jobs.filter(j => j.type === 'housing') },
     job: { title: '💼 職缺資訊', color: '#3b82f6', items: jobs.filter(j => j.type === 'job') },
@@ -66,6 +85,30 @@ export default function Sidebar({
   const handleModeClick = (mode) => {
     setAppMode(appMode === mode ? 'normal' : mode);
   };
+
+  // 🎯 需求 2：如果是收合模式，只顯示一顆浮動的展開按鈕，讓出最大地圖空間
+  if (isCollapsed) {
+    return (
+      <div style={{ width: 0, position: 'relative', zIndex: 100 }}>
+        <button
+          onClick={() => setIsCollapsed(false)}
+          title="展開側邊欄"
+          style={{
+            position: 'absolute', top: '24px', left: '24px',
+            backgroundColor: '#2563eb', color: 'white', border: 'none',
+            borderRadius: '50%', width: '48px', height: '48px',
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+            transition: 'transform 0.2s, background-color 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <ChevronRight size={28} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: `${sidebarWidth}px`, flexShrink: 0, overflowX: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', borderRight: '1px solid #e2e8f0', zIndex: 20, position: 'relative' }}>

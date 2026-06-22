@@ -15,6 +15,10 @@ export default function App() {
   const [appMode, setAppMode] = useState('normal'); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [focusedItem, setFocusedItem] = useState(null); 
+  
+  // 🌟 新增：由 App 統一管理側邊欄的寬度與收合狀態
+  const [sidebarWidth, setSidebarWidth] = useState(420); 
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // ==========================================
   // 1. 登入與權限管理
@@ -113,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row', backgroundColor: '#ffffff', zIndex: 50, overflow: 'hidden', textAlign: 'left', fontFamily: 'sans-serif', '--sidebar-width': isCollapsed ? '0px' : `${sidebarWidth}px` }}>
       
       <Sidebar 
         user={user} 
@@ -128,6 +132,11 @@ export default function App() {
           setAppMode('normal'); 
         }}
         onDeleteItem={handleDeleteItem}
+        // 🌟 將狀態與修改函式傳遞給 Sidebar
+        sidebarWidth={sidebarWidth}
+        setSidebarWidth={setSidebarWidth}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
       
       <MapArea 
